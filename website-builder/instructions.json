@@ -1,0 +1,157 @@
+{
+  "theme": {
+    "darkMode": true,
+    "defaultTheme": "dark",
+    "enableSystem": true,
+    "font": "Inter",
+    "colors": {
+      "primary": { "from": "#60a5fa", "to": "#8b5cf6" },
+      "background": "hsl(222.2, 84%, 4.9%)",
+      "foreground": "hsl(210, 40%, 98%)",
+      "card": "hsl(222.2, 84%, 4.9%)",
+      "card-foreground": "hsl(210, 40%, 98%)",
+      "popover": "hsl(222.2, 84%, 4.9%)",
+      "popover-foreground": "hsl(210, 40%, 98%)",
+      "primary2": "hsl(217.2, 91.2%, 59.8%)",
+      "primary-foreground": "hsl(222.2, 47.4%, 11.2%)",
+      "secondary": "hsl(217.2, 32.6%, 17.5%)",
+      "secondary-foreground": "hsl(210, 40%, 98%)",
+      "muted": "hsl(217.2, 32.6%, 17.5%)",
+      "muted-foreground": "hsl(215, 20.2%, 65.1%)",
+      "accent": "hsl(217.2, 32.6%, 17.5%)",
+      "accent-foreground": "hsl(210, 40%, 98%)",
+      "destructive": "hsl(0, 62.8%, 30.6%)",
+      "destructive-foreground": "hsl(210, 40%, 98%)",
+      "border": "hsl(217.2, 32.6%, 17.5%)",
+      "input": "hsl(217.2, 32.6%, 17.5%)",
+      "ring": "hsl(224.3, 76.3%, 48%)"
+    }
+  },
+  "stylesheets": ["app/globals.css"],
+  "layout": [
+    {
+      "component": "Navbar",
+      "props": {
+        "logo": "/favicon.ico",
+        "links": ["Features", "Pricing", "Blog", "Contact"],
+        "themeToggle": true
+      },
+      "styles": ["bg-gray-950", "text-white", "px-8", "py-4"]
+    },
+    {
+      "component": "Hero",
+      "id": "hero",
+      "elements": [
+        {
+          "type": "backgroundGradient",
+          "gradient": ["#111827", "#1f2937", "#111827"]
+        },
+        {
+          "type": "gridOverlay",
+          "opacity": 0.2,
+          "spacing": { "x": 14, "y": 24 },
+          "lineColor": "#8080800a"
+        },
+        {
+          "type": "glowOrb",
+          "positions": [
+            {
+              "x": "5%",
+              "y": "10%",
+              "color": "blue",
+              "size": 288,
+              "blur": 128,
+              "opacity": 0.2
+            },
+            {
+              "x": "80%",
+              "y": "80%",
+              "color": "purple",
+              "size": 288,
+              "blur": 128,
+              "opacity": 0.2
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Automate Your Sales with AI-Powered Funnels",
+          "style": ["text-4xl", "md:text-6xl", "font-extrabold"],
+          "textGradient": ["from-blue-400", "to-purple-600"]
+        },
+        {
+          "type": "subheading",
+          "text": "Loctelli creates ads, funnels leads into an AI chat system that qualifies and books meetings, all without lifting a finger.",
+          "style": ["text-xl", "text-gray-300", "max-w-2xl", "mx-auto"]
+        },
+        {
+          "type": "buttons",
+          "items": [
+            {
+              "label": "Get Started",
+              "style": [
+                "bg-gradient-to-r",
+                "from-blue-600",
+                "to-purple-600",
+                "text-white"
+              ],
+              "action": "start"
+            },
+            {
+              "label": "Book a Demo",
+              "style": ["outline", "border-gray-700", "text-white"],
+              "action": "https://calendly.com/your-demo-link"
+            }
+          ]
+        },
+        {
+          "type": "scrollIndicator",
+          "animation": "bounce",
+          "style": ["border-2", "border-gray-400", "w-6", "h-10"]
+        }
+      ],
+      "styles": [
+        "relative",
+        "h-screen",
+        "flex",
+        "items-center",
+        "justify-center"
+      ]
+    },
+    {
+      "component": "HowItWorks",
+      "description": "Three-step process illustration",
+      "styles": ["py-20", "bg-gray-900", "text-white"]
+    },
+    {
+      "component": "Features",
+      "description": "Feature grid or cards",
+      "styles": ["py-20", "bg-gray-950", "text-white"]
+    },
+    {
+      "component": "Testimonials",
+      "description": "Carousel of user quotes",
+      "styles": ["py-20", "bg-gray-900", "text-white"]
+    },
+    {
+      "component": "Pricing",
+      "description": "Tiered pricing cards with CTAs",
+      "styles": ["py-20", "bg-gray-950", "text-white"]
+    },
+    {
+      "component": "Blog",
+      "description": "Latest articles list or cards",
+      "styles": ["py-20", "bg-gray-900", "text-white"]
+    },
+    {
+      "component": "Contact",
+      "description": "Contact form with inputs and submit button",
+      "styles": ["py-20", "bg-gray-950", "text-white"]
+    },
+    {
+      "component": "Footer",
+      "description": "Site credits and links",
+      "styles": ["py-8", "bg-gray-900", "text-gray-400"]
+    }
+  ]
+}

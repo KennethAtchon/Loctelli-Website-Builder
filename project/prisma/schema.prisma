@@ -1,0 +1,319 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Models migrated from SQLAlchemy models
+
+model AdminUser {
+  id              Int         @id @default(autoincrement())
+  name            String
+  email           String      @unique
+  password        String      // Hashed password for authentication
+  role            String      @default("admin") // admin, super_admin
+  isActive        Boolean     @default(true)
+  permissions     Json?       // JSON field for granular permissions
+  lastLoginAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  createdUsers    User[]      // Users created by this admin
+  promptTemplates PromptTemplate[] // Prompt templates created by this admin
+  subAccounts     SubAccount[] // SubAccounts created by this admin
+  integrationTemplates IntegrationTemplate[] // Integration templates created by this admin
+  integrations    Integration[] // Integrations created by this admin
+  websites        Website[]   // Websites created by this admin
+  websiteChanges  WebsiteChange[] // Website changes created by this admin
+  buildJobs       BuildJob[]      // Build jobs initiated by this admin
+  notifications   UserNotification[] // Notifications for this admin
+}
+
+model SubAccount {
+  id              Int         @id @default(autoincrement())
+  name            String      // SubAccount name (e.g., "Acme Corp", "TechStart Inc")
+  description     String?     @db.Text // Optional description
+  isActive        Boolean     @default(true)
+  settings        Json?       // SubAccount-specific settings
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relationships
+  createdByAdminId Int
+  createdByAdmin  AdminUser   @relation(fields: [createdByAdminId], references: [id])
+  users           User[]      // Users belonging to this SubAccount
+  strategies      Strategy[]  // Strategies created within this SubAccount
+  leads           Lead[]      // Leads created within this SubAccount
+  bookings        Booking[]   // Bookings created within this SubAccount
+  integrations    Integration[] // Integrations configured for this SubAccount
+}
+
+model User {
+  id              Int         @id @default(autoincrement())
+  name            String
+  email           String      @unique
+  password        String      // Hashed password for authentication
+  role            String      @default("user") // admin, user, manager
+  isActive        Boolean     @default(true)
+  company         String?
+  budget          String?
+  bookingsTime    Json?       // JSON field for bookings time
+  bookingEnabled  Int         @default(1) // 0 = False, 1 = True
+  calendarId      String?     // Calendar ID for GoHighLevel integration
+  locationId      String?     // Location ID for GoHighLevel integration
+  assignedUserId  String?     // Assigned User ID for GoHighLevel integration
+  lastLoginAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  subAccountId    Int         // Required: User must belong to a SubAccount
+  subAccount      SubAccount  @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
+  createdByAdminId Int?       // Admin who created this user
+  createdByAdmin  AdminUser?  @relation(fields: [createdByAdminId], references: [id])
+  strategies      Strategy[]
+  leads           Lead[]      // Leads created by this user
+  bookings        Booking[]
+}
+
+model Strategy {
+  id                      Int        @id @default(autoincrement())
+  userId                  Int
+  subAccountId            Int        // Required: Strategy belongs to a SubAccount
+  subAccount              SubAccount @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
+  name                    String
+  tag                     String?
+  tone                    String?
+  aiInstructions          String?    @db.Text
+  objectionHandling       String?    @db.Text
+  qualificationPriority   String?
+  creativity              Int?
+  aiObjective             String?    @db.Text
+  disqualificationCriteria String?   @db.Text
+  exampleConversation     Json?
+  delayMin                Int?       // Minimum delay in seconds
+  delayMax                Int?       // Maximum delay in seconds
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @default(now()) @updatedAt
+  user                    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leads                   Lead[]
+  promptTemplateId        Int
+  promptTemplate          PromptTemplate @relation(fields: [promptTemplateId], references: [id])
+}
+
+model Lead {
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  strategyId     Int
+  subAccountId   Int       // Required: Lead belongs to a SubAccount
+  subAccount     SubAccount @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
+  name           String
+  email          String?
+  phone          String?
+  company        String?
+  position       String?
+  customId       String?
+  messageHistory Json?     // List of messages in JSON format
+  status         String    @default("lead")
+  notes          String?   @db.Text
+  lastMessage    String?   @db.Text
+  lastMessageDate String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  strategy       Strategy  @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  bookings       Booking[]
+}
+
+model Booking {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  leadId       Int?
+  subAccountId Int      // Required: Booking belongs to a SubAccount
+  subAccount   SubAccount @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
+  bookingType  String
+  details      Json
+  status       String   @default("pending")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lead         Lead?    @relation(fields: [leadId], references: [id])
+}
+
+model PromptTemplate {
+  id                  Int       @id @default(autoincrement())
+  name                String
+  description         String?   @db.Text
+  isActive            Boolean   @default(false) // Only one can be active globally
+  systemPrompt        String    @db.Text // The main system prompt
+  role                String    @default("conversational AI and sales representative")
+  instructions        String?   @db.Text // Additional instructions
+  context             String?   @db.Text // Context information
+  bookingInstruction  String?   @db.Text // Booking-specific instructions
+  creativity          Int       @default(7) // 1-10 scale
+  temperature         Float     @default(0.7) // OpenAI temperature
+  maxTokens           Int?      // Optional token limit
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  createdByAdminId    Int
+  createdByAdmin      AdminUser @relation(fields: [createdByAdminId], references: [id])
+  strategies          Strategy[]
+}
+
+model IntegrationTemplate {
+  id                  Int       @id @default(autoincrement())
+  name                String    // e.g., "GoHighLevel", "Facebook Ads", "Google Analytics"
+  displayName         String    // e.g., "GoHighLevel CRM", "Facebook Advertising"
+  description         String?   @db.Text
+  category            String    // e.g., "CRM", "Advertising", "Analytics", "Social Media"
+  icon                String?   // Icon identifier or URL
+  isActive            Boolean   @default(true)
+  configSchema        Json      // JSON schema defining required/optional fields
+  setupInstructions   String?   @db.Text // Markdown instructions for setup
+  webhookUrl          String?   // Default webhook URL if applicable
+  apiVersion          String?   // API version supported
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  createdByAdminId    Int
+  createdByAdmin      AdminUser @relation(fields: [createdByAdminId], references: [id])
+  integrations        Integration[] // Subaccount integrations using this template
+}
+
+model Integration {
+  id                    Int       @id @default(autoincrement())
+  subAccountId          Int       // Required: Integration belongs to a SubAccount
+  subAccount            SubAccount @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
+  integrationTemplateId Int
+  integrationTemplate   IntegrationTemplate @relation(fields: [integrationTemplateId], references: [id])
+  name                  String    // Custom name for this integration instance
+  description           String?   @db.Text
+  isActive              Boolean   @default(false)
+  config                Json      // Integration-specific configuration
+  status                String    @default("pending") // pending, active, error, disconnected
+  lastSyncAt            DateTime?
+  errorMessage          String?   @db.Text
+  webhookSecret         String?   // For webhook verification
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  createdByAdminId      Int
+  createdByAdmin        AdminUser @relation(fields: [createdByAdminId], references: [id])
+}
+
+// Website Builder Models
+
+model Website {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  type        String   // 'static', 'vite', 'react', 'nextjs'
+  structure   Json     // Parsed HTML/CSS/JS structure (metadata only)
+  
+  // R2 File References (instead of file content)
+  originalZipUrl String?  // R2 URL to original ZIP file
+  extractedFiles Json?    // File metadata: [{name, path, size, type, r2Key}]
+  
+  // Build-related fields for React/Vite projects
+  buildStatus String?  @default("pending") // 'pending', 'building', 'running', 'failed', 'stopped'
+  previewUrl  String?  // URL where the built application is hosted
+  processId   String?  // Docker container ID or process ID
+  buildOutput Json?    // Build logs and output
+  portNumber  Int?     // Port number allocated for the preview server
+  lastBuildAt DateTime?
+  buildDuration Int?   // Build duration in seconds
+  
+  // Storage metadata
+  storageProvider String @default("r2") // 'database', 'r2', 'hybrid'
+  totalFileSize   Int?   // Total size of all files in bytes
+  fileCount       Int?   // Number of files
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  createdByAdminId Int
+  createdByAdmin  AdminUser @relation(fields: [createdByAdminId], references: [id])
+  changeHistory   WebsiteChange[] // AI modification history
+  files           WebsiteFile[]   // Individual file records
+  buildJobs       BuildJob[]      // Build jobs for this website
+}
+
+model WebsiteFile {
+  id          String   @id @default(cuid())
+  websiteId   String
+  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  
+  name        String   // Original filename
+  path        String   // File path within project
+  r2Key       String   // R2 storage key
+  r2Url       String   // Public R2 URL
+  size        Int      // File size in bytes
+  type        String   // MIME type
+  hash        String?  // File hash for caching
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([websiteId, path])
+}
+
+model WebsiteChange {
+  id          String   @id @default(cuid())
+  websiteId   String
+  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  type        String   // 'ai_edit', 'manual_edit', 'revert'
+  description String   // Human-readable description of the change
+  prompt      String?  // Original AI prompt if applicable
+  changes     Json     // Detailed change information
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  createdByAdminId Int
+  createdByAdmin  AdminUser @relation(fields: [createdByAdminId], references: [id])
+}
+
+// Asynchronous Queue System Models
+
+model BuildJob {
+  id              String   @id @default(cuid())
+  websiteId       String
+  website         Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  userId          Int      // Admin user who initiated the build
+  user            AdminUser @relation(fields: [userId], references: [id])
+  
+  status          String   @default("pending") // 'pending', 'queued', 'building', 'completed', 'failed', 'cancelled'
+  priority        Int      @default(0) // Higher number = higher priority
+  progress        Int      @default(0) // 0-100 percentage
+  currentStep     String?  // Current build step description
+  logs            Json?    // Build logs and output
+  error           String?  @db.Text // Error message if failed
+  
+  allocatedPort   Int?     // Port allocated for preview server
+  previewUrl      String?  // URL where built application is hosted
+  notificationSent Boolean @default(false) // Whether completion notification was sent
+  
+  createdAt       DateTime @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+  
+  // Relationships
+  notifications   UserNotification[]
+}
+
+model UserNotification {
+  id          String   @id @default(cuid())
+  userId      Int
+  user        AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId       String
+  job         BuildJob  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  type        String   // 'build_queued', 'build_started', 'build_completed', 'build_failed', 'build_cancelled'
+  title       String
+  message     String   @db.Text
+  read        Boolean  @default(false)
+  actionUrl   String?  // URL to navigate to when notification is clicked
+  
+  createdAt   DateTime @default(now())
+}

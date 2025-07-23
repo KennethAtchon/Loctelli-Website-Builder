@@ -1,0 +1,46 @@
+# Dependency directories
+node_modules/
+
+# Build output
+dist/
+
+# Local development files
+.env*.local
+.env
+
+# Logs
+*.log
+logs/
+
+# System files
+.DS_Store
+.dockerignore
+Dockerfile
+
+# IDE/Editor
+.idea/
+.vscode/
+
+# Test files
+*.test.js
+*.spec.js
+test/
+
+# Coverage reports
+coverage/
+
+# Temporary files
+tmp/
+temp/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml 
